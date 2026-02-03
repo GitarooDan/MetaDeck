@@ -98,7 +98,8 @@ export class Mounts implements AsyncMountable
 	register(): () => void
 	{
 		let self = this;
-		return registerForLoginStateChange(
+		console.log("[MetaDeck DIAG] registerForLoginStateChange: subscribing");
+        return registerForLoginStateChange(
 			   function (username) {
 				   (async function () {
 					   if (await waitForServicesInitialized())

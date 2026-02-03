@@ -1,3 +1,4 @@
+console.log("[MetaDeck DIAG] PLUGIN src/index.tsx loaded v2-assoc " + Date.now());
 import {
 	definePlugin, Plugin
 } from "@decky/api";
@@ -18,7 +19,7 @@ import {Mounts} from "./System";
 import {Fragment, ReactNode} from "react";
 import {MetaDeckState, MetaDeckStateContext, MetaDeckStateContextProvider} from "./MetaDeckState";
 import {EventBus} from "./events";
-import {DialogButton, Navigation} from "@decky/ui";
+import {DialogButton, Navigation, toaster} from "@decky/ui";
 import {BsGearFill} from "react-icons/bs";
 import {SettingsComponent} from "./modules/SettingsComponent";
 import {ProviderSettingsComponent} from "./modules/ProviderSettingsComponent";
@@ -98,6 +99,64 @@ export default definePlugin(() => {
 	const eventBus = new EventBus();
 	const mounts = new Mounts(eventBus, logger);
 	const state = new MetaDeckState(eventBus, mounts);
+	try
+	{
+		toaster.toast({
+			title: "MetaDeck DIAG",
+			body: "Frontend boot executed",
+			duration: 4000,
+		});
+	} catch (e) {}
+
+	try
+	{
+		console.log("[MetaDeck DIAG] boot OK");
+
+		// 1) Can we see app types for non-steam shortcuts?
+		try
+		{
+			const ovs = (globalThis as any)?.getAllNonSteamAppOverviews?.() ?? [];
+			console.log("[MetaDeck DIAG] nonsteam overviews", ovs.length);
+			console.log(
+				"[MetaDeck DIAG] sample app_type",
+				ovs.slice(0, 5).map((o: any) => ({ appid: o.appid, name: o.display_name, app_type: o.app_type }))
+			);
+		} catch (e)
+		{
+			console.log("[MetaDeck DIAG] getAllNonSteamAppOverviews failed", e);
+		}
+
+		// 2) Do the hook targets exist?
+		try
+		{
+			console.log(
+				"[MetaDeck DIAG] appDetailsStore keys",
+				typeof appDetailsStore === "object" ? Object.keys(appDetailsStore).slice(0, 50) : typeof appDetailsStore
+			);
+			console.log("[MetaDeck DIAG] appDetailsStore.GetDescriptions typeof", typeof (appDetailsStore as any)?.GetDescriptions);
+			console.log("[MetaDeck DIAG] appDetailsStore.GetAssociations typeof", typeof (appDetailsStore as any)?.GetAssociations);
+		} catch (e)
+		{
+			console.log("[MetaDeck DIAG] appDetailsStore inspect failed", e);
+		}
+
+		try
+		{
+			const proto = (appStore as any)?.allApps?.[0]?.__proto__;
+			console.log(
+				"[MetaDeck DIAG] appStore proto keys",
+				proto ? Object.getOwnPropertyNames(proto).filter((k: string) => k.startsWith("BIs")).slice(0, 50) : "no-proto"
+			);
+			console.log("[MetaDeck DIAG] BIsModOrShortcut typeof", typeof proto?.BIsModOrShortcut);
+		} catch (e)
+		{
+			console.log("[MetaDeck DIAG] appStore proto inspect failed", e);
+		}
+	} catch (e)
+	{
+		console.log("[MetaDeck DIAG] boot diag failed", e);
+	}
+
 	window.MetaDeck__SECRET = {
 		set bypassCounter(count: number)
 		{

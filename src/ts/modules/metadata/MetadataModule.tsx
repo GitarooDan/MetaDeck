@@ -33,7 +33,6 @@ import {
 import {format, t} from "../../useTranslations";
 import {stateTransaction} from "../../util";
 import {FC, Fragment, ReactElement, ReactNode, useState} from "react";
-import {Markdown} from "../../markdown";
 import {SteamAppDetails, SteamAppOverview} from "../../SteamTypes";
 import {routePatch} from "../../RoutePatches";
 // import {addStyle, removeStyle} from "../../styleInjector";
@@ -145,13 +144,10 @@ export class MetadataModule extends Module<
 			stateTransaction(() => {
 				if (this.config.markdown)
 				{
+					const withHeader = this.config.title_header ? `${overview.display_name}\n` + String(desc ?? "") : String(desc ?? "");
 					appData.descriptionsData = {
-						strFullDescription: <Markdown>
-							{this.config.title_header ? `# ${overview.display_name}\n` + desc : desc}
-						</Markdown>,
-						strSnippet: <Markdown>
-							{this.config.title_header ? `# ${overview.display_name}\n` + desc : desc}
-						</Markdown>
+						strFullDescription: withHeader,
+						strSnippet: withHeader
 					}
 				} else
 				{
@@ -177,81 +173,96 @@ export class MetadataModule extends Module<
 	addMounts(mounts: Mounts): void
 	{
 		const module = this
-		mounts.addPatchMount({
-			patch(): Patch
-			{
-				return replacePatch(
-					   // @ts-ignore
-					   appDetailsStore.__proto__,
-					   "GetDescriptions",
-					   (args) => {
-						   if (!module.isValid)
-							   return callOriginal;
-						   const overview = appStore.GetAppOverviewByAppID(args[0])
-						   if (overview.app_type == 1073741824)
-						   {
-							   let appData = appDetailsStore.GetAppData(args[0])
-							   // if (appData && !appData?.descriptionsData)
-							   if (appData)
-							   {
-								   const data = module.fetchData(args[0])
-								   const desc = module.descriptions ? data?.description ?? t("noDescription") : "";
-								   module.logger.debug(desc);
-								   stateTransaction(() => {
-									   appData.descriptionsData = {
-										   strFullDescription: desc,
-										   strSnippet: desc
-									   }
-									   appDetailsCache.SetCachedDataForApp(args[0], "descriptions", 1, appData.descriptionsData)
-								   })
-
-								   return appData.descriptionsData;
-							   }
-						   }
-						   return callOriginal;
-					   }
-				)
-			}
-		})
-
+				// --- MetaDeck FIX: inject provider (IGDB) descriptions into Steam UI ---
 		mounts.addPatchMount({
 			patch(): Patch
 			{
 				return afterPatch(
-					   // @ts-ignore
-					   appDetailsStore.__proto__,
-					   "GetDescriptions",
-					   (args, ret: {
-						   strFullDescription: ReactNode,
-						   strSnippet: ReactNode
-					   }): {
-						   strFullDescription: ReactNode,
-						   strSnippet: ReactNode
-					   } => {
-						   if (!module.isValid)
-							   return ret;
-						   const overview = appStore.GetAppOverviewByAppID(args[0])
-						   // if (overview.app_type != 1073741824)
-						   // {
-						   if (module.config.markdown)
-							   return {
-								   strFullDescription: <Markdown>
-									   {module.config.title_header ? `# ${overview.display_name}\n` + ret?.strFullDescription as string : ret?.strFullDescription as string}
-								   </Markdown>,
-								   strSnippet: <Markdown>
-									   {module.config.title_header ? `# ${overview.display_name}\n` + ret?.strSnippet as string : ret?.strSnippet as string}
-								   </Markdown>
-							   }
-						   else
-							   return ret
-						   // }
-						   // return ret;
-					   }
+					// @ts-ignore
+					appDetailsStore.__proto__,
+					"GetDescriptions",
+					(args, ret) => {
+						try
+						{
+							if (!module.isValid || !module.descriptions)
+								return ret;
+
+							const appId = args[0] as number;
+							const overview = appStore.GetAppOverviewByAppID(appId);
+
+							// Only touch Non-Steam shortcuts/mods
+							if (!overview || overview.app_type !== 1073741824)
+								return ret;
+
+							const inject = (descText: any) => {
+								const header = module.config.title_header ? `${overview.display_name}\n\n` : "";
+								const full = header + String(descText ?? "");
+								const snip = full.length > 400 ? (full.slice(0, 397) + "...") : full;
+
+								try
+								{
+									const appData = appDetailsStore.GetAppData(appId);
+									if (appData)
+									{
+										stateTransaction(() => {
+											appData.descriptionsData = {
+												strFullDescription: full,
+												strSnippet: snip
+											};
+											appDetailsCache.SetCachedDataForApp(appId, "descriptions", 1, appData.descriptionsData)
+										})
+									}
+								} catch (e) {}
+
+								module.logger.debug("DIAG injected descriptions", { appId, chars: full.length });
+								console.log("[MetaDeck DIAG] injected descriptions appId=", appId, "chars=", full.length);
+								return { strFullDescription: full, strSnippet: snip };
+							};
+
+							// Kick off a fetch if needed
+							let data: any = null;
+							try { data = (module as any).data?.[appId] ?? module.fetchData(appId); } catch (e) {}
+
+							if (data?.description)
+								return inject(data.description);
+
+							// One-shot retry (IGDB calls are async; update cache once it lands)
+							try
+							{
+								(module as any).__descRetry = (module as any).__descRetry || {};
+								if (!(module as any).__descRetry[appId])
+								{
+									(module as any).__descRetry[appId] = true;
+									let tries = 0;
+									const tick = () => {
+										tries++;
+										let d: any = null;
+										try { d = (module as any).data?.[appId]; } catch (e) {}
+										if (d?.description)
+										{
+											inject(d.description);
+											delete (module as any).__descRetry[appId];
+										}
+										else if (tries < 20)
+											setTimeout(tick, 500);
+										else
+											delete (module as any).__descRetry[appId];
+									};
+									setTimeout(tick, 200);
+								}
+							} catch (e) {}
+
+							return ret;
+						} catch (e)
+						{
+							return ret;
+						}
+					}
 				)
 			}
 		})
 
-		mounts.addPatchMount({
+mounts.addPatchMount({
 			patch(): Patch
 			{
 				return replacePatch(
@@ -367,7 +378,7 @@ export class MetadataModule extends Module<
 								   return false;
 							   }
 							   // @ts-ignore
-							   if (Router?.WindowStore?.GamepadUIMainWindowInstance?.m_history?.location?.pathname === '/library/home')
+							   if (DFL.Router?.WindowStore?.GamepadUIMainWindowInstance?.m_history?.location?.pathname === '/library/home')
 							   {
 								   return false;
 							   }
