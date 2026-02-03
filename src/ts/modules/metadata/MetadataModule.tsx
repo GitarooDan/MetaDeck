@@ -303,7 +303,13 @@ mounts.addPatchMount({
 						   if (appStore.GetAppOverviewByAppID(args[0]).app_type == 1073741824)
 						   {
 							   let appData = appDetailsStore.GetAppData(args[0])
-							   if (appData && !appData?.associationData)
+							   const hasAssociations = !!(
+								   appData?.associationData
+								   && (appData.associationData.rgDevelopers?.length
+									   || appData.associationData.rgPublishers?.length
+									   || appData.associationData.rgFranchises?.length)
+							   );
+							   if (appData && !hasAssociations)
 							   {
 								   const data = module.fetchData(args[0])
 								   const devs = data?.developers ?? [];
@@ -324,6 +330,8 @@ mounts.addPatchMount({
 									   appDetailsCache.SetCachedDataForApp(args[0], "associations", 1, appData.associationData)
 								   })
 							   }
+							   if (appData?.associationData)
+								   return appData.associationData;
 						   }
 						   return callOriginal;
 					   }
@@ -370,7 +378,10 @@ mounts.addPatchMount({
 							   return ret;
 						   if (ret === true)
 						   {
-							   if (module.bypassBypass > 0)
+							   // @ts-ignore
+							   if (this.app_type !== 1073741824)
+								   return ret;
+								if (module.bypassBypass > 0)
 							   {
 								   module.logger.debug("Bypassing", module.bypassBypass)
 								   if (module.bypassBypass > 0)
@@ -385,8 +396,13 @@ mounts.addPatchMount({
 							   if (module.bypassCounter > 0)
 							   {
 								   module.bypassCounter--;
+								   return true;
 							   }
-							   return module.bypassCounter === -1 || module.bypassCounter > 0
+							   if (module.bypassCounter === -1)
+							   {
+								   return true;
+							   }
+							   return false;
 						   }
 						   return ret;
 					   }
