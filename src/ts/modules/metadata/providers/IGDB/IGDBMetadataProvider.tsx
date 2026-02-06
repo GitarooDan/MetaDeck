@@ -41,6 +41,7 @@ export interface IGDBMetadataProviderCache extends ProviderCache<{}, ResolverCac
 
 export class IGDBMetadataProvider extends MetadataProvider<any>
 {
+	private static readonly REQUEST_TIMEOUT_MS = 15000;
 
 	static identifier: keyof MetadataProviderConfigs = "igdb";
 	static title: string = t("providerMetadataIGDB");
@@ -106,6 +107,7 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 		if (this.overrides[appId] == 0)
 			return false;
 		const display_name = appStore.GetAppOverviewByAppID(appId)?.display_name;
+		if (!display_name) return false;
 		const results = await this.throttle(() => this.search(display_name));
 		const names = results.map(value => value.title);
 		const closest_names = distanceWithLimit(this.fuzziness, display_name, names);
@@ -220,14 +222,32 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 	private async search(title: string): Promise<MetadataData[]>
 	{
 		if (this.apiServer == undefined) return[]
-		const response = (await fetch(`${this.apiServer.url}/search`, {
-			method: "POST",
-			headers: {
-				"Accept": "application/json",
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({title})
-		}));
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), IGDBMetadataProvider.REQUEST_TIMEOUT_MS);
+		let response: Response;
+		try
+		{
+			response = (await fetch(`${this.apiServer.url}/search`, {
+				method: "POST",
+				headers: {
+					"Accept": "application/json",
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({title}),
+				signal: controller.signal
+			}));
+		} catch (e)
+		{
+			if ((e as Error).name === "AbortError")
+			{
+				this.logger.warn(`IGDB search timed out after ${IGDBMetadataProvider.REQUEST_TIMEOUT_MS}ms for \"${title}\" via ${this.apiServer.url}`);
+				return [];
+			}
+			throw e;
+		} finally
+		{
+			clearTimeout(timeout);
+		}
 		if (response.ok)
 		{
 			let games: Game[] = await response.json()
@@ -248,6 +268,7 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 		this.logger.debug(`Fetching metadata for game ${appId}`)
 
 		const display_name = appStore.GetAppOverviewByAppID(appId)?.display_name;
+		if (!display_name) return undefined;
 		const data_id = this.overrides[appId];
 		this.logger.debug("data_id", data_id);
 		const results = await this.search(display_name);
@@ -287,6 +308,7 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 	public async getAllMetadataForGame(appId: number): Promise<Record<number, MetadataData> | undefined>
 	{
 		const display_name = appStore.GetAppOverviewByAppID(appId)?.display_name;
+		if (!display_name) return undefined;
 		const results = await this.search(display_name);
 		if (results.length > 0)
 		{

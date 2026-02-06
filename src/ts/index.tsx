@@ -1,5 +1,4 @@
-console.log("[MetaDeck DIAG] PLUGIN src/index.tsx loaded v2-assoc " + Date.now());
-import {configure} from "mobx";
+import {initMobxIsolation} from "./mobx";
 import {
 	definePlugin, Plugin
 } from "@decky/api";
@@ -25,7 +24,10 @@ import {BsGearFill} from "react-icons/bs";
 import {SettingsComponent} from "./modules/SettingsComponent";
 import {ProviderSettingsComponent} from "./modules/ProviderSettingsComponent";
 
-configure({isolateGlobalState: true});
+
+initMobxIsolation();
+console.log("[MetaDeck DIAG] PLUGIN src/index.tsx loaded v2-assoc " + Date.now());
+
 
 declare global
 {

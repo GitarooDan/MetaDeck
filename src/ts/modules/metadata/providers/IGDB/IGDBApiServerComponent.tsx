@@ -3,6 +3,23 @@ import {APIServer} from "./IGDBMetadataProvider";
 import {DialogButton, Dropdown, DropdownOption, Field, Focusable, TextField} from "@decky/ui";
 import {FaPlus, FaTrash} from "react-icons/fa";
 import {fetchNoCors} from "@decky/api";
+import Logger from "../../../../logger";
+
+const logger = new Logger("IGDBApiServerComponent");
+const OFFICIAL_API_SERVER_TIMEOUT_MS = 5000;
+
+async function getOfficialApiServers(): Promise<APIServer[]>
+{
+	const timeoutPromise = new Promise<never>((_, reject) => {
+		setTimeout(() => reject(new Error("Timed out fetching official API servers")), OFFICIAL_API_SERVER_TIMEOUT_MS);
+	});
+	const response = await Promise.race([
+		fetchNoCors("https://raw.githubusercontent.com/EmuDeck/MetaDeck/refs/heads/main/api_servers.json"),
+		timeoutPromise
+	]);
+	const servers = await (response as Response).json() as Record<string, string>;
+	return Object.entries(servers).map(([name, url]) => ({name, url}));
+}
 
 export const IGDBApiServerComponent: FC<{
 	server: APIServer | undefined,
@@ -17,15 +34,26 @@ export const IGDBApiServerComponent: FC<{
 
 	useEffect(() => {
 		(async () => {
-			setServerOptions(Object.entries(await (await fetchNoCors("https://raw.githubusercontent.com/EmuDeck/MetaDeck/refs/heads/main/api_servers.json")).json() as Record<string, string>)
-				   .map(([name, url]) => ({name, url} as APIServer))
-				   .concat(customServers)
-				   .map((server) => ({
-					   label: `${server.name} (${server.url})`,
-					   data: server
-				   } as DropdownOption)))
+			let officialServers: APIServer[] = [];
+			try
+			{
+				officialServers = await getOfficialApiServers();
+			} catch (e)
+			{
+				logger.warn("Failed to load official API server list, using custom/current servers only", e)
+			}
+
+			const currentServer = server ? [server] : [];
+			setServerOptions(officialServers
+				.concat(customServers)
+				.concat(currentServer)
+				.filter((serverValue, idx, arr) => arr.findIndex((candidate) => candidate.url === serverValue.url) === idx)
+				.map((serverValue) => ({
+					label: `${serverValue.name} (${serverValue.url})`,
+					data: serverValue
+				} as DropdownOption)))
 		})()
-	}, [customServers]);
+	}, [customServers, server]);
 
 	return <Fragment>
 		<Field

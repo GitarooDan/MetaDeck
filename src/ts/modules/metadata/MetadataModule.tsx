@@ -262,7 +262,19 @@ export class MetadataModule extends Module<
 			}
 		})
 
-mounts.addPatchMount({
+const hasMetadataForApp = (appId?: number): boolean => {
+			if (!appId)
+				return false;
+			const data = this.data?.[appId];
+			return !!(
+				data?.description
+				|| data?.developers?.length
+				|| data?.publishers?.length
+				|| data?.release_date
+			);
+		};
+
+		mounts.addPatchMount({
 			patch(): Patch
 			{
 				return replacePatch(
@@ -275,7 +287,9 @@ mounts.addPatchMount({
 						   // @ts-ignore
 						   if ((this as SteamAppOverview).app_type == 1073741824)
 						   {
-							   // @ts-ignore
+							    if (args[0] === CustomStoreCategory.NonSteam && hasMetadataForApp((this as SteamAppOverview).appid))
+								   return false;
+								// @ts-ignore
 							   const data = module.fetchData((this as SteamAppOverview).appid)
 							   const categories = data?.store_categories ?? [];
 							   if (categories.includes(args[0]))
@@ -554,8 +568,11 @@ mounts.addPatchMount({
 						const featuresList = findInReactTree(ret, (e) => Array.isArray(e?.props?.children) && e?.props?.children?.length > 10);
 						const overview: SteamAppOverview = featuresList?.props?.children?.[0]?.props?.overview
 
+						const hasMetadata = hasMetadataForApp(overview?.appid);
 						for (const category of Object.values(CustomStoreCategory))
 						{
+							if (category === CustomStoreCategory.NonSteam && hasMetadata)
+								continue;
 							if (typeof category != "string" && !(featuresList?.props?.children as Array<ReactElement>)?.some(value => value?.props?.feature == category))
 							{
 								(featuresList?.props?.children as Array<ReactElement>)?.push(<CustomFeature
@@ -581,6 +598,20 @@ mounts.addPatchMount({
 					return ret;
 				const overview: SteamAppOverview = ret.props.children.props.overview;
 				const details: SteamAppDetails = ret.props.children.props.details;
+				try
+				{
+					const assocData = appDetailsStore.GetAppData(overview.appid)?.associationData;
+					console.log("[MetaDeck DIAG] app page", {
+						appid: overview.appid,
+						name: overview.display_name,
+						hasMetadata: hasMetadataForApp(overview.appid),
+						data: module.data?.[overview.appid],
+						associations: assocData
+					});
+				} catch (e)
+				{
+					console.log("[MetaDeck DIAG] app page inspect failed", e);
+				}
 
 				if (overview.app_type == 1073741824)
 				{
