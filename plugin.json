@@ -1,5 +1,7 @@
 {
   "name": "MetaDeck",
+  "main": "dist/index.js",
+  "type": "frontend",
   "author": "Witherking25  'Kernel Panic'",
   "flags": ["debug"],
   "api_version": 1,
