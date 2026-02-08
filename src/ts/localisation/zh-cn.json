@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "应用牌组验证状态",
 	"compatdataSettingsVerifiedDesc": "拉取提供者的编译数据并将其注入蒸汽甲板验证的指示器",
 	"compatdataSettingsNotes": "应用牌组验证笔记",
-	"compatdataSettingsNotesDesc": "从提供商拉取额外的兼容性信息并将其注入钢甲板已验证的指示器"
+	"compatdataSettingsNotesDesc": "从提供商拉取额外的兼容性信息并将其注入钢甲板已验证的指示器",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

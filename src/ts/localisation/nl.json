@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Geverifieerde dekstatus toepassen",
 	"compatdataSettingsVerifiedDesc": "Pullt data van providers compat en injecteert het in stoomoog geverifieerde indicatoren",
 	"compatdataSettingsNotes": "Geverifieerde dekaantekeningen toepassen",
-	"compatdataSettingsNotesDesc": "Pullt aanvullende compatibiliteitsinformatie van providers en injecteert het in stoomdek geverifieerde indicatoren"
+	"compatdataSettingsNotesDesc": "Pullt aanvullende compatibiliteitsinformatie van providers en injecteert het in stoomdek geverifieerde indicatoren",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

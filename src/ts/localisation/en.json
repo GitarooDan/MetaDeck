@@ -50,6 +50,8 @@
 	"metadataSettingsAssociationsDesc": "Pulls developers and publishers from providers and injects it into steam's info page",
 	"metadataSettingsCategories": "Apply Store Categories",
 	"metadataSettingsCategoriesDesc": "Pulls categories from providers and injects it into steam's store categories",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available",
 	"metadataSettingsRating": "Apply Metacritic Ratings",
 	"metadataSettingsRatingDesc": "Pulls ratings data from providers and injects it into steam's metacritic data",
 	"metadataSettingsInstallSize": "Apply Install Size",

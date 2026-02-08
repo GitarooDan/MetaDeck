@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Применить статус подтверждённой колоды",
 	"compatdataSettingsVerifiedDesc": "Вытягивает сравнимые данные из провайдеров и вводит их в палубу верифицированных индикаторов",
 	"compatdataSettingsNotes": "Применить подтвержденные заметки",
-	"compatdataSettingsNotesDesc": "Вытягивает дополнительную информацию о совместимости от провайдеров и вводит ее в свежие индикаторы пара"
+	"compatdataSettingsNotesDesc": "Вытягивает дополнительную информацию о совместимости от провайдеров и вводит ее в свежие индикаторы пара",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

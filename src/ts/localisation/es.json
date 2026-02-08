@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Aplicar estado verificado del mazo",
 	"compatdataSettingsVerifiedDesc": "Extraer datos de los proveedores e inyectarlos en los indicadores verificados de la cubierta del vapor",
 	"compatdataSettingsNotes": "Aplicar notas verificadas del mazo",
-	"compatdataSettingsNotesDesc": "Retira información adicional de compatibilidad de los proveedores e inyecta información en los indicadores verificados de la cubierta del vapor"
+	"compatdataSettingsNotesDesc": "Retira información adicional de compatibilidad de los proveedores e inyecta información en los indicadores verificados de la cubierta del vapor",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

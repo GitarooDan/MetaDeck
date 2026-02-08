@@ -51,6 +51,7 @@ export interface MetadataConfig extends ModuleConfig<MetadataProviderConfigs, Me
 	release_date: boolean,
 	associations: boolean,
 	categories: boolean,
+	use_steam_metadata: boolean,
 	markdown: boolean,
 	title_header: boolean,
 	rating: boolean,
@@ -262,7 +263,7 @@ export class MetadataModule extends Module<
 			}
 		})
 
-const hasMetadataForApp = (appId?: number): boolean => {
+		const hasMetadataForApp = (appId?: number): boolean => {
 			if (!appId)
 				return false;
 			const data = this.data?.[appId];
@@ -273,6 +274,57 @@ const hasMetadataForApp = (appId?: number): boolean => {
 				|| data?.release_date
 			);
 		};
+
+		const getRedirectSteamAppId = (appId?: number): number | null => {
+			if (!appId || !module.isValid || !module.config.use_steam_metadata)
+				return null;
+			const overview = appStore.GetAppOverviewByAppID(appId);
+			if (!overview || overview.app_type !== 1073741824)
+				return null;
+			const data = module.fetchData(appId);
+			const steamAppId = data?.steam_appid ?? data?.steam_appids?.[0];
+			if (typeof steamAppId === "number" && steamAppId > 0)
+				return steamAppId;
+			return null;
+		};
+
+		const maybeRedirectAppId = (args: any[]) => {
+			const appId = args[0] as number;
+			const redirectId = getRedirectSteamAppId(appId);
+			if (redirectId)
+			{
+				console.log(`[MetaDeck] redirect store/appdetails shortcut=${appId} -> steam_appid=${redirectId}`);
+				args[0] = redirectId;
+			}
+		};
+
+		mounts.addPatchMount({
+			patch(): Patch
+			{
+				return beforePatch(
+					// @ts-ignore
+					appDetailsStore.__proto__,
+					"GetAppDetails",
+					(args) => {
+						maybeRedirectAppId(args);
+					}
+				)
+			}
+		})
+
+		mounts.addPatchMount({
+			patch(): Patch
+			{
+				return beforePatch(
+					// @ts-ignore
+					appDetailsStore.__proto__,
+					"RegisterForAppData",
+					(args) => {
+						maybeRedirectAppId(args);
+					}
+				)
+			}
+		})
 
 		mounts.addPatchMount({
 			patch(): Patch
@@ -709,6 +761,16 @@ const hasMetadataForApp = (appId?: number): boolean => {
 		this.config.categories = categories
 	}
 
+	get useSteamMetadata(): boolean
+	{
+		return this.config.use_steam_metadata
+	}
+
+	set useSteamMetadata(useSteamMetadata: boolean)
+	{
+		this.config.use_steam_metadata = useSteamMetadata
+	}
+
 	get rating(): boolean
 	{
 		return this.config.rating
@@ -767,6 +829,7 @@ const hasMetadataForApp = (appId?: number): boolean => {
 			const [releaseDate, setReleaseDate] = useState(this.releaseDate)
 			const [associations, setAssociations] = useState(this.associations)
 			const [categories, setCategories] = useState(this.categories)
+			const [useSteamMetadata, setUseSteamMetadata] = useState(this.useSteamMetadata)
 			const [rating, setRating] = useState(this.rating)
 			const [installSize, setInstallSize] = useState(this.installSize)
 			const [installDate, setInstallDate] = useState(this.installDate)
@@ -824,6 +887,15 @@ const hasMetadataForApp = (appId?: number): boolean => {
 								 checked={categories} onChange={(checked) => {
 							   setCategories(checked);
 							   this.categories = checked;
+						   }}/>
+					   </PanelSectionRow>
+					   <PanelSectionRow>
+						   <ToggleField
+								 label={t("metadataSettingsSteamMetadata")}
+								 description={t("metadataSettingsSteamMetadataDesc")}
+								 checked={useSteamMetadata} onChange={(checked) => {
+							   setUseSteamMetadata(checked);
+							   this.useSteamMetadata = checked;
 						   }}/>
 					   </PanelSectionRow>
 					   <PanelSectionRow>

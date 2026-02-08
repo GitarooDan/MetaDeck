@@ -34,6 +34,7 @@ export class Settings
 				release_date: true,
 				associations: true,
 				categories: true,
+				use_steam_metadata: true,
 				markdown: true,
 				title_header: true,
 				rating: true,

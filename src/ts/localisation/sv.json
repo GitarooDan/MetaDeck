@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Tillämpa kortleksverifierad status",
 	"compatdataSettingsVerifiedDesc": "Pulls komprimera data från leverantörer och injicerar den i ångans däcksverifierade indikatorer",
 	"compatdataSettingsNotes": "Tillämpa kortleksverifierade anteckningar",
-	"compatdataSettingsNotesDesc": "Dra ytterligare information om kompatibilitet från leverantörer och injicerar den i ångans däcksverifierade indikatorer"
+	"compatdataSettingsNotesDesc": "Dra ytterligare information om kompatibilitet från leverantörer och injicerar den i ångans däcksverifierade indikatorer",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

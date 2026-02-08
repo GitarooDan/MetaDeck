@@ -50,7 +50,8 @@ export abstract class Module<
 	   Data
 > implements AsyncMountable
 {
-
+	private static readonly PROVIDE_TIMEOUT_MS = 20000;
+	
 	state: MetaDeckState;
 
 	abstract identifier: string;
@@ -231,7 +232,7 @@ export abstract class Module<
 		{
 			if (!this.hasData(appId))
 			{
-				let data = await this.provide(appId);
+				let data = await this.provideWithTimeout(appId);
 				if (!!data)
 				{
 					this.logger.debug(`Caching ${this.identifier} for ${appId}: `, data);
@@ -248,6 +249,25 @@ export abstract class Module<
 		} catch (e: any)
 		{
 			this.handleError(e);
+		}
+	}
+
+	private async provideWithTimeout(appId: number): Promise<Data | undefined>
+	{
+		let timeoutId: NodeJS.Timeout | undefined = undefined;
+		try
+		{
+			const timeoutPromise = new Promise<undefined>((resolve) => {
+				timeoutId = setTimeout(() => {
+					this.logger.warn(`Timed out providing ${this.identifier} for ${appId} after ${Module.PROVIDE_TIMEOUT_MS}ms`);
+					resolve(undefined);
+				}, Module.PROVIDE_TIMEOUT_MS);
+			});
+			return await Promise.race([this.provide(appId), timeoutPromise]);
+		} finally
+		{
+			if (timeoutId)
+				clearTimeout(timeoutId);
 		}
 	}
 

@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Použít stav ověření balíčku",
 	"compatdataSettingsVerifiedDesc": "Táhne kompilaci dat od poskytovatelů a vloží je do ověřených indikátorů páry",
 	"compatdataSettingsNotes": "Použít balíček ověřených poznámek",
-	"compatdataSettingsNotesDesc": "Stáhne další informace o kompatibilitě od poskytovatelů a vloží je do ověřených indikátorů páry"
+	"compatdataSettingsNotesDesc": "Stáhne další informace o kompatibilitě od poskytovatelů a vloží je do ověřených indikátorů páry",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

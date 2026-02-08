@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Stapel verifizierten Status anwenden",
 	"compatdataSettingsVerifiedDesc": "Zieht Daten von Anbietern zusammen und injiziert sie in überprüfte Dampfindikatoren",
 	"compatdataSettingsNotes": "Deck verifizierte Notizen anwenden",
-	"compatdataSettingsNotesDesc": "Zieht zusätzliche Kompatibilitätsinformationen von Anbietern und injiziert diese in die Dampf geprüften Indikatoren"
+	"compatdataSettingsNotesDesc": "Zieht zusätzliche Kompatibilitätsinformationen von Anbietern und injiziert diese in die Dampf geprüften Indikatoren",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Apply Deck Verified Status",
 	"compatdataSettingsVerifiedDesc": "Pulls compat data from providers and injects it into steam's deck verified indicators",
 	"compatdataSettingsNotes": "Apply Deck Verified Notes",
-	"compatdataSettingsNotesDesc": "Pulls additional compatibility information from providers and injects it into steam's deck verified indicators"
+	"compatdataSettingsNotesDesc": "Pulls additional compatibility information from providers and injects it into steam's deck verified indicators",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

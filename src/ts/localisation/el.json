@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Εφαρμόστε Την Επαληθευμένη Κατάσταση Τράπουλας",
 	"compatdataSettingsVerifiedDesc": "Τραβήξτε τα δεδομένα από τους παρόχους και τα εγχύστε στους επαληθευμένους δείκτες του ατμού",
 	"compatdataSettingsNotes": "Εφαρμόστε Τις Επαληθευμένες Σημειώσεις Τράπουλας",
-	"compatdataSettingsNotesDesc": "Τραβήξτε πρόσθετες πληροφορίες συμβατότητας από τους παρόχους και εγχύστε τις στους επαληθευμένους δείκτες καταστρώματος ατμού"
+	"compatdataSettingsNotesDesc": "Τραβήξτε πρόσθετες πληροφορίες συμβατότητας από τους παρόχους και εγχύστε τις στους επαληθευμένους δείκτες καταστρώματος ατμού",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

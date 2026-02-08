@@ -39,6 +39,11 @@ export interface IGDBMetadataProviderCache extends ProviderCache<{}, ResolverCac
 {
 }
 
+type IGDBProxyGame = Game & {
+	steam_appid?: number | null,
+	steam_appids?: number[]
+}
+
 export class IGDBMetadataProvider extends MetadataProvider<any>
 {
 	private static readonly REQUEST_TIMEOUT_MS = 15000;
@@ -124,11 +129,17 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 	}
 
 
-	private gameToMetadataData(game: Game): MetadataData
+	private gameToMetadataData(game: IGDBProxyGame): MetadataData
 	{
 		const gameDevs: Developer[] = []
 		const gamePubs: Publisher[] = []
 		const gameCats: (StoreCategory | CustomStoreCategory)[] = [CustomStoreCategory.NonSteam]
+		const steamAppids = Array.isArray(game.steam_appids)
+			? game.steam_appids.filter((id) => typeof id === "number")
+			: [];
+		const steamAppid = typeof game.steam_appid === "number"
+			? game.steam_appid
+			: (steamAppids[0] ?? null);
 
 		if (game.game_modes && game.game_modes.length > 0)
 		{
@@ -215,6 +226,8 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 			publishers: gamePubs,
 			rating: game.aggregated_rating,
 			release_date: game.first_release_date,
+			steam_appid: steamAppid,
+			steam_appids: steamAppids.length > 0 ? steamAppids : undefined,
 			store_categories: gameCats
 		}
 	}
@@ -250,10 +263,21 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 		}
 		if (response.ok)
 		{
-			let games: Game[] = await response.json()
+			let games: IGDBProxyGame[] = [];
+			try
+			{
+				games = await response.json();
+			} catch (error)
+			{
+				this.logger.warn(`IGDB search returned invalid JSON for \"${title}\" via ${this.apiServer.url}`, error);
+				return [];
+			}
 			// noinspection SuspiciousTypeOfGuard
 			if (!(games instanceof Array))
-				return this.throttle(() => this.search(title));
+			{
+				this.logger.warn(`IGDB search returned unexpected payload for \"${title}\" via ${this.apiServer.url}`, games);
+				return [];
+			}
 			games = games.sort((a, b) => a.id - b.id)
 			return games.map<MetadataData>(game => this.gameToMetadataData(game)).sort((a, b) => (a.id as number) - (b.id as number))
 		} else if (response.status == 429)

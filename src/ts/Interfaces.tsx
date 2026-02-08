@@ -15,6 +15,8 @@ export interface MetadataData
 	rating?: number,
 	install_size?: number,
 	install_date?: number,
+	steam_appid?: number | null,
+	steam_appids?: number[],
 	store_categories: (StoreCategory | CustomStoreCategory)[]
 }
 

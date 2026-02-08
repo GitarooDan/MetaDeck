@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Käytä Pakan Varmennettu Tila",
 	"compatdataSettingsVerifiedDesc": "Vetää tietoja palveluntarjoajilta ja ruiskuttaa sen höyryn kannella todennettuja indikaattoreita",
 	"compatdataSettingsNotes": "Käytä Vahvistettuja Muistiinpanoja",
-	"compatdataSettingsNotesDesc": "Vetää muita yhteensopivuustietoja tarjoajilta ja ruiskuttaa ne höyryn kannella todennettuihin indikaattoreihin"
+	"compatdataSettingsNotesDesc": "Vetää muita yhteensopivuustietoja tarjoajilta ja ruiskuttaa ne höyryn kannella todennettuihin indikaattoreihin",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

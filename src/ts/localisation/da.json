@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Anvend Deck Verificeret Status",
 	"compatdataSettingsVerifiedDesc": "Træk compat data fra udbydere og injicerer det i damp dæk verificerede indikatorer",
 	"compatdataSettingsNotes": "Anvend Deck Verificerede Noter",
-	"compatdataSettingsNotesDesc": "Træk yderligere kompatibilitetsoplysninger fra udbydere og injicerer det i damp dæk verificerede indikatorer"
+	"compatdataSettingsNotesDesc": "Træk yderligere kompatibilitetsoplysninger fra udbydere og injicerer det i damp dæk verificerede indikatorer",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Aplică statusul verificat al punții",
 	"compatdataSettingsVerifiedDesc": "Pulsează date de la furnizori şi le injectează în indicatori verificaţi pe puntea aburului",
 	"compatdataSettingsNotes": "Aplică note verificate de punte",
-	"compatdataSettingsNotesDesc": "Trage informaţii suplimentare de compatibilitate de la furnizori şi injectează-le în indicatori verificaţi pe puntea aburului"
+	"compatdataSettingsNotesDesc": "Trage informaţii suplimentare de compatibilitate de la furnizori şi injectează-le în indicatori verificaţi pe puntea aburului",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

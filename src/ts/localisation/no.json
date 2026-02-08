@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Bruk bekreftet forkortelse",
 	"compatdataSettingsVerifiedDesc": "Punkter som kommer sammen data fra leverandører og setter dem i samsvar med steam dekksverifiserte indikatorer",
 	"compatdataSettingsNotes": "Bruk bekreftede merknader",
-	"compatdataSettingsNotesDesc": "Trekker ytterligere kompatibilitetsinformasjon fra leverandører og setter den i samsvar med kriterier som er verifiserte indikatorer for damp"
+	"compatdataSettingsNotesDesc": "Trekker ytterligere kompatibilitetsinformasjon fra leverandører og setter den i samsvar med kriterier som er verifiserte indikatorer for damp",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Appliquer le statut vérifié du deck",
 	"compatdataSettingsVerifiedDesc": "Récupère les données compat des fournisseurs et les injecte dans les indicateurs vérifiés du deck de vapeur",
 	"compatdataSettingsNotes": "Appliquer les notes vérifiées du deck",
-	"compatdataSettingsNotesDesc": "Récupère des informations de compatibilité supplémentaires des fournisseurs et les injecte dans les indicateurs vérifiés du paquet de vapeur"
+	"compatdataSettingsNotesDesc": "Récupère des informations de compatibilité supplémentaires des fournisseurs et les injecte dans les indicateurs vérifiés du paquet de vapeur",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

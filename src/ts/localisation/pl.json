@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Zastosuj status zweryfikowanego talii",
 	"compatdataSettingsVerifiedDesc": "Pobiera dane kompaktowe od dostawców i wprowadza je do zweryfikowanych wskaźników pokładu parowego",
 	"compatdataSettingsNotes": "Zastosuj zweryfikowane notatki talii",
-	"compatdataSettingsNotesDesc": "Pobiera dodatkowe informacje o kompatybilności od dostawców i wprowadza je do zweryfikowanych wskaźników pokładu parowego"
+	"compatdataSettingsNotesDesc": "Pobiera dodatkowe informacje o kompatybilności od dostawców i wprowadza je do zweryfikowanych wskaźników pokładu parowego",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

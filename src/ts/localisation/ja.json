@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "デッキの認証ステータスを適用する",
 	"compatdataSettingsVerifiedDesc": "プロバイダからコンパクトなデータを取り出し、スチームのデッキにそれを注入し検証されたインジケータを確認します",
 	"compatdataSettingsNotes": "デッキ認証済みノートを適用",
-	"compatdataSettingsNotesDesc": "プロバイダから追加の互換性情報を取り出し、スチームのデッキにそれを注入します。 検証されたインジケータ。"
+	"compatdataSettingsNotesDesc": "プロバイダから追加の互換性情報を取り出し、スチームのデッキにそれを注入します。 検証されたインジケータ。",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }

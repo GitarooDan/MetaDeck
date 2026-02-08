@@ -63,5 +63,7 @@
 	"compatdataSettingsVerified": "Applica compatibilità con Steam Deck",
 	"compatdataSettingsVerifiedDesc": "Scarica i dati di compatibilità dai provider e li aggiunge agli indicatori di compatibilità di Steam Deck",
 	"compatdataSettingsNotes": "Applica dettagli di compatibilità con Steam Deck",
-	"compatdataSettingsNotesDesc": "Scarica dati di compatibilità aggiuntivi dai provider e li aggiunge agli indicatori di compatibilità di Steam Deck"
+	"compatdataSettingsNotesDesc": "Scarica dati di compatibilità aggiuntivi dai provider e li aggiunge agli indicatori di compatibilità di Steam Deck",
+	"metadataSettingsSteamMetadata": "Use Steam metadata when Steam AppID is found",
+	"metadataSettingsSteamMetadataDesc": "Redirects store/appdetails requests for shortcuts to the mapped Steam AppID when available"
 }
