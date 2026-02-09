@@ -1,4 +1,4 @@
-import {runInAction} from "./mobx";
+import {runInAction} from "./deckyMobx";
 import {SteamAppDetails, SteamAppOverview} from "./SteamTypes";
 import {closest, distance} from "fastest-levenshtein";
 

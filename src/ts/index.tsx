@@ -1,4 +1,4 @@
-import {initMobxIsolation} from "./mobx";
+import "./deckyMobx";
 import {
 	definePlugin, Plugin
 } from "@decky/api";
@@ -25,7 +25,6 @@ import {SettingsComponent} from "./modules/SettingsComponent";
 import {ProviderSettingsComponent} from "./modules/ProviderSettingsComponent";
 
 
-initMobxIsolation();
 console.log("[MetaDeck DIAG] PLUGIN src/index.tsx loaded v2-assoc " + Date.now());
 
 
