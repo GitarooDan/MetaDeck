@@ -1,16 +1,23 @@
+import * as localMobx from "mobx";
+
 declare global {
 	interface Window {
 		mobx?: any;
+		DFL?: {
+			mobx?: any;
+			MobX?: any;
+		};
 		__MetaDeckMobxConfigured?: boolean;
+		__MetaDeckMobxSource?: "global" | "local";
 	}
 }
 
 function getMobx(): any {
-	const m = (window as any).mobx;
-	if (!m) {
-		throw new Error("[MetaDeck] window.mobx is not available. Decky did not provide MobX globally.");
+	const globalMobx = (window as any).mobx ?? (window as any).DFL?.mobx ?? (window as any).DFL?.MobX;
+	if (globalMobx) {
+		return globalMobx;
 	}
-	return m;
+	return localMobx;
 }
 
 type RunInAction = <T>(fn: () => T) => T;
@@ -22,6 +29,9 @@ if (!(window as any).__MetaDeckMobxConfigured) {
 		mobx.configure({isolateGlobalState: true, enforceActions: "never"});
 	}
 	(window as any).__MetaDeckMobxConfigured = true;
+	(window as any).__MetaDeckMobxSource = ((window as any).mobx ?? (window as any).DFL?.mobx ?? (window as any).DFL?.MobX)
+		? "global"
+		: "local";
 }
 
 export const runInAction: RunInAction = mobx.runInAction;

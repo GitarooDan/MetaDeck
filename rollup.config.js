@@ -40,7 +40,7 @@ export default defineConfig({
 		})
 	],
 	context: 'window',
-	external: ['react', 'react-dom', '@decky/ui', 'mobx', 'mobx-react-lite'],
+	external: ['react', 'react-dom', '@decky/ui'],
 	treeshake: {
 		// Assume all external modules have imports with side effects (the default) while allowing decky libraries to treeshake
 		pureExternalImports: {
