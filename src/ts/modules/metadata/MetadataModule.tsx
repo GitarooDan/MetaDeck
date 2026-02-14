@@ -170,6 +170,7 @@ export class MetadataModule extends Module<
 
 	private bypassCounter = 0
 	bypassBypass = 0
+	private pendingSteamRedirectFetches: Record<number, boolean> = {}
 
 	addMounts(mounts: Mounts): void
 	{
@@ -295,7 +296,36 @@ export class MetadataModule extends Module<
 			{
 				console.log(`[MetaDeck] redirect store/appdetails shortcut=${appId} -> steam_appid=${redirectId}`);
 				args[0] = redirectId;
+				return;
 			}
+
+			if (!appId || module.pendingSteamRedirectFetches[appId])
+				return;
+
+			const overview = appStore.GetAppOverviewByAppID(appId);
+			if (!overview || overview.app_type !== 1073741824 || !module.isValid || !module.config.use_steam_metadata)
+				return;
+
+			module.pendingSteamRedirectFetches[appId] = true;
+			void module.fetchDataAsync(appId).then((data) => {
+				const steamAppId = data?.steam_appid ?? data?.steam_appids?.[0];
+				if (typeof steamAppId === "number" && steamAppId > 0)
+				{
+					console.log(`[MetaDeck] resolved steam_appid for shortcut=${appId}: ${steamAppId}; re-requesting app details`);
+					try
+					{
+						// Trigger another details request for the current shortcut id.
+						// The patched GetAppDetails/RegisterForAppData hooks will now redirect to the Steam appid.
+						// @ts-ignore
+						appDetailsStore.GetAppDetails(appId);
+					} catch (e)
+					{
+						module.logger.warn("Failed to re-request app details after steam appid resolve", e);
+					}
+				}
+			}).finally(() => {
+				delete module.pendingSteamRedirectFetches[appId];
+			});
 		};
 
 		mounts.addPatchMount({

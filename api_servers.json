@@ -1,3 +1,4 @@
 {
-	"NGinus": "https://metadeck-igdb-proxy.ngni.us"
+	"NGinus": "https://metadeck-igdb-proxy.ngni.us",
+	"Local": "https://127.0.0.1:3333"
 }

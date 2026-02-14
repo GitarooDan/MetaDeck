@@ -4,6 +4,7 @@ import {DialogButton, Dropdown, DropdownOption, Field, Focusable, TextField} fro
 import {FaPlus, FaTrash} from "react-icons/fa";
 import {fetchNoCors} from "@decky/api";
 import Logger from "../../../../logger";
+import bundledApiServers from "../../../../../../api_servers.json";
 
 const logger = new Logger("IGDBApiServerComponent");
 const OFFICIAL_API_SERVER_TIMEOUT_MS = 5000;
@@ -21,6 +22,11 @@ async function getOfficialApiServers(): Promise<APIServer[]>
 	return Object.entries(servers).map(([name, url]) => ({name, url}));
 }
 
+function getBundledApiServers(): APIServer[]
+{
+	return Object.entries(bundledApiServers as Record<string, string>).map(([name, url]) => ({name, url}));
+}
+
 export const IGDBApiServerComponent: FC<{
 	server: APIServer | undefined,
 	customServers: APIServer[],
@@ -34,13 +40,13 @@ export const IGDBApiServerComponent: FC<{
 
 	useEffect(() => {
 		(async () => {
-			let officialServers: APIServer[] = [];
+			let officialServers: APIServer[] = getBundledApiServers();
 			try
 			{
-				officialServers = await getOfficialApiServers();
+				officialServers = officialServers.concat(await getOfficialApiServers());
 			} catch (e)
 			{
-				logger.warn("Failed to load official API server list, using custom/current servers only", e)
+				logger.warn("Failed to load remote API server list, using bundled/custom/current servers only", e)
 			}
 
 			const currentServer = server ? [server] : [];
