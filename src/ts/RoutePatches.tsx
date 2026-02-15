@@ -9,7 +9,7 @@ export function routePatch(path: string, patch: RoutePatch): Mountable {
 				props?.match?.params?.appid ??
 				props?.params?.appid ??
 				"unknown";
-			console.log("[MetaDeck DIAG] routePatch hit", path, "appid=", appid);
+			console.warn("[MetaDeck DIAG] routePatch hit", path, "appid=", appid);
 		} catch {
 			// no-op
 		}

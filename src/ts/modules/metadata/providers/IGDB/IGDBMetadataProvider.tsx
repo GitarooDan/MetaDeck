@@ -256,7 +256,9 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 				this.logger.warn(`IGDB search timed out after ${IGDBMetadataProvider.REQUEST_TIMEOUT_MS}ms for \"${title}\" via ${this.apiServer.url}`);
 				return [];
 			}
-			throw e;
+
+			this.logger.warn(`IGDB search failed for \"${title}\" via ${this.apiServer.url}; returning no results`, e);
+			return [];
 		} finally
 		{
 			clearTimeout(timeout);

@@ -25,7 +25,7 @@ import {SettingsComponent} from "./modules/SettingsComponent";
 import {ProviderSettingsComponent} from "./modules/ProviderSettingsComponent";
 
 
-console.log("[MetaDeck DIAG] PLUGIN src/index.tsx loaded v2-assoc " + Date.now());
+console.warn("[MetaDeck DIAG] PLUGIN src/index.tsx loaded v2-assoc " + Date.now());
 
 
 declare global
@@ -114,51 +114,51 @@ export default definePlugin(() => {
 
 	try
 	{
-		console.log("[MetaDeck DIAG] boot OK");
+		console.warn("[MetaDeck DIAG] boot OK");
 
 		// 1) Can we see app types for non-steam shortcuts?
 		try
 		{
 			const ovs = (globalThis as any)?.getAllNonSteamAppOverviews?.() ?? [];
-			console.log("[MetaDeck DIAG] nonsteam overviews", ovs.length);
-			console.log(
+			console.warn("[MetaDeck DIAG] nonsteam overviews", ovs.length);
+			console.warn(
 				"[MetaDeck DIAG] sample app_type",
 				ovs.slice(0, 5).map((o: any) => ({ appid: o.appid, name: o.display_name, app_type: o.app_type }))
 			);
 		} catch (e)
 		{
-			console.log("[MetaDeck DIAG] getAllNonSteamAppOverviews failed", e);
+			console.warn("[MetaDeck DIAG] getAllNonSteamAppOverviews failed", e);
 		}
 
 		// 2) Do the hook targets exist?
 		try
 		{
-			console.log(
+			console.warn(
 				"[MetaDeck DIAG] appDetailsStore keys",
 				typeof appDetailsStore === "object" ? Object.keys(appDetailsStore).slice(0, 50) : typeof appDetailsStore
 			);
-			console.log("[MetaDeck DIAG] appDetailsStore.GetDescriptions typeof", typeof (appDetailsStore as any)?.GetDescriptions);
-			console.log("[MetaDeck DIAG] appDetailsStore.GetAssociations typeof", typeof (appDetailsStore as any)?.GetAssociations);
+			console.warn("[MetaDeck DIAG] appDetailsStore.GetDescriptions typeof", typeof (appDetailsStore as any)?.GetDescriptions);
+			console.warn("[MetaDeck DIAG] appDetailsStore.GetAssociations typeof", typeof (appDetailsStore as any)?.GetAssociations);
 		} catch (e)
 		{
-			console.log("[MetaDeck DIAG] appDetailsStore inspect failed", e);
+			console.warn("[MetaDeck DIAG] appDetailsStore inspect failed", e);
 		}
 
 		try
 		{
 			const proto = (appStore as any)?.allApps?.[0]?.__proto__;
-			console.log(
+			console.warn(
 				"[MetaDeck DIAG] appStore proto keys",
 				proto ? Object.getOwnPropertyNames(proto).filter((k: string) => k.startsWith("BIs")).slice(0, 50) : "no-proto"
 			);
-			console.log("[MetaDeck DIAG] BIsModOrShortcut typeof", typeof proto?.BIsModOrShortcut);
+			console.warn("[MetaDeck DIAG] BIsModOrShortcut typeof", typeof proto?.BIsModOrShortcut);
 		} catch (e)
 		{
-			console.log("[MetaDeck DIAG] appStore proto inspect failed", e);
+			console.warn("[MetaDeck DIAG] appStore proto inspect failed", e);
 		}
 	} catch (e)
 	{
-		console.log("[MetaDeck DIAG] boot diag failed", e);
+		console.warn("[MetaDeck DIAG] boot diag failed", e);
 	}
 
 	window.MetaDeck__SECRET = {

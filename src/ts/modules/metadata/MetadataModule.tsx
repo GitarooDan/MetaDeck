@@ -217,7 +217,7 @@ export class MetadataModule extends Module<
 								} catch (e) {}
 
 								module.logger.debug("DIAG injected descriptions", { appId, chars: full.length });
-								console.log("[MetaDeck DIAG] injected descriptions appId=", appId, "chars=", full.length);
+								console.warn("[MetaDeck DIAG] injected descriptions appId=", appId, "chars=", full.length);
 								return { strFullDescription: full, strSnippet: snip };
 							};
 
@@ -289,13 +289,41 @@ export class MetadataModule extends Module<
 			return null;
 		};
 
-		const maybeRedirectAppId = (args: any[]) => {
+		const logRedirectDiag = (source: string, shortcutAppId: number, redirectedAppId?: number) => {
+			try
+			{
+				const shortcutOverview = appStore.GetAppOverviewByAppID(shortcutAppId);
+				const metadata = module.data?.[shortcutAppId] as MetadataData | undefined;
+				const metadataSteamAppId = metadata?.steam_appid ?? metadata?.steam_appids?.[0];
+				const steamAppId = redirectedAppId ?? (typeof metadataSteamAppId === "number" ? metadataSteamAppId : undefined);
+				const steamOverview = steamAppId ? appStore.GetAppOverviewByAppID(steamAppId) : null;
+				const shortcutAppData = appDetailsStore.GetAppData(shortcutAppId);
+				const steamAppData = steamAppId ? appDetailsStore.GetAppData(steamAppId) : null;
+				console.warn("[MetaDeck DIAG] redirect state", {
+					source,
+					shortcutAppId,
+					shortcutType: shortcutOverview?.app_type,
+					metadataSteamAppId,
+					redirectedAppId: redirectedAppId ?? null,
+					steamOverviewFound: !!steamOverview,
+					shortcutHasDesc: !!shortcutAppData?.descriptionsData?.strFullDescription,
+					steamHasDesc: !!steamAppData?.descriptionsData?.strFullDescription,
+					steamHasAssociations: !!(steamAppData?.associationData?.rgDevelopers?.length || steamAppData?.associationData?.rgPublishers?.length)
+				});
+			} catch (e)
+			{
+				console.warn("[MetaDeck DIAG] redirect state failed", source, shortcutAppId, e);
+			}
+		};
+
+		const maybeRedirectAppId = (args: any[], source: string) => {
 			const appId = args[0] as number;
 			const redirectId = getRedirectSteamAppId(appId);
 			if (redirectId)
 			{
-				console.log(`[MetaDeck] redirect store/appdetails shortcut=${appId} -> steam_appid=${redirectId}`);
+				console.warn(`[MetaDeck] redirect ${source} shortcut=${appId} -> steam_appid=${redirectId}`);
 				args[0] = redirectId;
+				logRedirectDiag(`${source}:redirected`, appId, redirectId);
 				return;
 			}
 
@@ -306,12 +334,14 @@ export class MetadataModule extends Module<
 			if (!overview || overview.app_type !== 1073741824 || !module.isValid || !module.config.use_steam_metadata)
 				return;
 
+			logRedirectDiag(`${source}:awaiting_metadata`, appId);
 			module.pendingSteamRedirectFetches[appId] = true;
 			void module.fetchDataAsync(appId).then((data) => {
 				const steamAppId = data?.steam_appid ?? data?.steam_appids?.[0];
 				if (typeof steamAppId === "number" && steamAppId > 0)
 				{
-					console.log(`[MetaDeck] resolved steam_appid for shortcut=${appId}: ${steamAppId}; re-requesting app details`);
+					console.warn(`[MetaDeck] resolved steam_appid for shortcut=${appId}: ${steamAppId}; re-requesting app details`);
+					logRedirectDiag(`${source}:resolved`, appId, steamAppId);
 					try
 					{
 						// Trigger another details request for the current shortcut id.
@@ -322,6 +352,10 @@ export class MetadataModule extends Module<
 					{
 						module.logger.warn("Failed to re-request app details after steam appid resolve", e);
 					}
+				}
+				else
+				{
+					logRedirectDiag(`${source}:resolved_no_steam_appid`, appId);
 				}
 			}).finally(() => {
 				delete module.pendingSteamRedirectFetches[appId];
@@ -336,7 +370,7 @@ export class MetadataModule extends Module<
 					appDetailsStore.__proto__,
 					"GetAppDetails",
 					(args) => {
-						maybeRedirectAppId(args);
+						maybeRedirectAppId(args, "GetAppDetails");
 					}
 				)
 			}
@@ -350,7 +384,7 @@ export class MetadataModule extends Module<
 					appDetailsStore.__proto__,
 					"RegisterForAppData",
 					(args) => {
-						maybeRedirectAppId(args);
+						maybeRedirectAppId(args, "RegisterForAppData");
 					}
 				)
 			}
@@ -683,16 +717,22 @@ export class MetadataModule extends Module<
 				try
 				{
 					const assocData = appDetailsStore.GetAppData(overview.appid)?.associationData;
-					console.log("[MetaDeck DIAG] app page", {
+					const metadata = module.data?.[overview.appid] as MetadataData | undefined;
+					const metadataSteamAppId = metadata?.steam_appid ?? metadata?.steam_appids?.[0];
+					console.warn("[MetaDeck DIAG] app page", {
 						appid: overview.appid,
 						name: overview.display_name,
+						overviewType: overview.app_type,
+						detailsUnAppID: details?.unAppID,
 						hasMetadata: hasMetadataForApp(overview.appid),
-						data: module.data?.[overview.appid],
+						metadataSteamAppId,
+						steamDetailsPresent: typeof metadataSteamAppId === "number" ? !!appDetailsStore.GetAppData(metadataSteamAppId) : false,
+						data: metadata,
 						associations: assocData
 					});
 				} catch (e)
 				{
-					console.log("[MetaDeck DIAG] app page inspect failed", e);
+					console.warn("[MetaDeck DIAG] app page inspect failed", e);
 				}
 
 				if (overview.app_type == 1073741824)
