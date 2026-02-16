@@ -1,6 +1,6 @@
 import "./deckyMobx";
 import {
-	definePlugin, Plugin
+	definePlugin, Plugin, callable
 } from "@decky/api";
 
 import {
@@ -100,6 +100,13 @@ declare global
 // noinspection JSUnusedGlobalSymbols
 export default definePlugin(() => {
 	const logger = new Logger("Index");
+	const backendDiag = callable<[string], void>("log");
+	const emitDiag = (message: string, payload?: unknown) => {
+		const suffix = payload === undefined ? "" : ` ${JSON.stringify(payload)}`;
+		const line = `${message}${suffix}`;
+		console.warn("[MetaDeck DIAG]", line);
+		void backendDiag(line).catch(() => {});
+	};
 	const eventBus = new EventBus();
 	const mounts = new Mounts(eventBus, logger);
 	const state = new MetaDeckState(eventBus, mounts);
@@ -114,51 +121,42 @@ export default definePlugin(() => {
 
 	try
 	{
-		console.warn("[MetaDeck DIAG] boot OK");
+		emitDiag("boot OK");
 
 		// 1) Can we see app types for non-steam shortcuts?
 		try
 		{
 			const ovs = (globalThis as any)?.getAllNonSteamAppOverviews?.() ?? [];
-			console.warn("[MetaDeck DIAG] nonsteam overviews", ovs.length);
-			console.warn(
-				"[MetaDeck DIAG] sample app_type",
-				ovs.slice(0, 5).map((o: any) => ({ appid: o.appid, name: o.display_name, app_type: o.app_type }))
-			);
+						emitDiag("nonsteam overviews", { count: ovs.length });
+			emitDiag("sample app_type", ovs.slice(0, 5).map((o: any) => ({ appid: o.appid, name: o.display_name, app_type: o.app_type })));
 		} catch (e)
 		{
-			console.warn("[MetaDeck DIAG] getAllNonSteamAppOverviews failed", e);
+			emitDiag("getAllNonSteamAppOverviews failed", String(e));
 		}
 
 		// 2) Do the hook targets exist?
 		try
 		{
-			console.warn(
-				"[MetaDeck DIAG] appDetailsStore keys",
-				typeof appDetailsStore === "object" ? Object.keys(appDetailsStore).slice(0, 50) : typeof appDetailsStore
-			);
-			console.warn("[MetaDeck DIAG] appDetailsStore.GetDescriptions typeof", typeof (appDetailsStore as any)?.GetDescriptions);
-			console.warn("[MetaDeck DIAG] appDetailsStore.GetAssociations typeof", typeof (appDetailsStore as any)?.GetAssociations);
+			emitDiag("appDetailsStore keys", typeof appDetailsStore === "object" ? Object.keys(appDetailsStore).slice(0, 50) : typeof appDetailsStore);
+			emitDiag("appDetailsStore.GetDescriptions typeof", typeof (appDetailsStore as any)?.GetDescriptions);
+			emitDiag("appDetailsStore.GetAssociations typeof", typeof (appDetailsStore as any)?.GetAssociations);
 		} catch (e)
 		{
-			console.warn("[MetaDeck DIAG] appDetailsStore inspect failed", e);
+			emitDiag("appDetailsStore inspect failed", String(e));
 		}
 
 		try
 		{
 			const proto = (appStore as any)?.allApps?.[0]?.__proto__;
-			console.warn(
-				"[MetaDeck DIAG] appStore proto keys",
-				proto ? Object.getOwnPropertyNames(proto).filter((k: string) => k.startsWith("BIs")).slice(0, 50) : "no-proto"
-			);
-			console.warn("[MetaDeck DIAG] BIsModOrShortcut typeof", typeof proto?.BIsModOrShortcut);
+			emitDiag("appStore proto keys", proto ? Object.getOwnPropertyNames(proto).filter((k: string) => k.startsWith("BIs")).slice(0, 50) : "no-proto");
+			emitDiag("BIsModOrShortcut typeof", typeof proto?.BIsModOrShortcut);
 		} catch (e)
 		{
-			console.warn("[MetaDeck DIAG] appStore proto inspect failed", e);
+			emitDiag("appStore proto inspect failed", String(e));
 		}
 	} catch (e)
 	{
-		console.warn("[MetaDeck DIAG] boot diag failed", e);
+		emitDiag("boot diag failed", String(e));
 	}
 
 	window.MetaDeck__SECRET = {

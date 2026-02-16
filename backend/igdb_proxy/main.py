@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Any
 from urllib import request
 from urllib.error import HTTPError, URLError
@@ -36,6 +37,29 @@ def _igdb_post(path: str, body: str) -> list[dict[str, Any]]:
 		raise HTTPException(status_code=502, detail=f"IGDB request failed: {exc}")
 
 
+def _as_int(value: Any) -> int | None:
+	if isinstance(value, int):
+		return value
+	if isinstance(value, str) and value.isdigit():
+		return int(value)
+	if isinstance(value, dict):
+		return _as_int(value.get("id"))
+	return None
+
+
+def _extract_uid_appid(uid: Any) -> int | None:
+	if isinstance(uid, int):
+		return uid
+	if isinstance(uid, str):
+		if uid.isdigit():
+			return int(uid)
+		# Accept mixed payloads such as "steam:367520" by extracting a trailing numeric id.
+		match = re.search(r"(\d+)$", uid)
+		if match:
+			return int(match.group(1))
+	return None
+
+
 def _extract_steam_appids(external_games: list[dict[str, Any]]) -> list[int]:
 	steam_appids: list[int] = []
 	for entry in external_games:
@@ -44,13 +68,21 @@ def _extract_steam_appids(external_games: list[dict[str, Any]]) -> list[int]:
 		uid = entry.get("uid")
 		if source is None and category is None:
 			continue
-		if str(source).lower() != "steam" and str(category) != "1":
+
+		# IGDB Steam source id is 1. We normalize int/string/object payload shapes.
+		source_id = _as_int(source)
+		category_id = _as_int(category)
+		is_steam_source = source_id == 1 or str(source).lower() == "steam"
+		is_steam_category = category_id == 1
+		if not (is_steam_source or is_steam_category):
 			continue
-		if isinstance(uid, str) and uid.isdigit():
-			steam_appids.append(int(uid))
-		elif isinstance(uid, int):
-			steam_appids.append(uid)
-	return steam_appids
+
+		appid = _extract_uid_appid(uid)
+		if appid is not None:
+			steam_appids.append(appid)
+
+	# preserve order but dedupe duplicates from multiple Steam rows
+	return list(dict.fromkeys(steam_appids))
 
 
 @app.post("/search")
@@ -69,7 +101,7 @@ async def search(payload: dict[str, Any]) -> JSONResponse:
 	for game in games:
 		external_games = _igdb_post(
 			"external_games",
-			f"fields uid, external_game_source, category; where game = {game['id']};",
+			f"fields uid, external_game_source, category; where game = {game['id']} & external_game_source = 1; limit 500;",
 		)
 		steam_appids = _extract_steam_appids(external_games)
 		game["steam_appids"] = steam_appids

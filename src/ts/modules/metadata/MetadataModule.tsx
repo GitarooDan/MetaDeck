@@ -18,6 +18,7 @@ import {
 	GOGMetadataProviderConfig, GOGMetadataProviderResolverCaches, GOGMetadataProviderResolverConfigs
 } from "./providers/GOG/GOGMetadataProvider";
 import {Mounts} from "../../System";
+import {callable} from "@decky/api";
 import {
 	afterPatch,
 	beforePatch,
@@ -171,10 +172,18 @@ export class MetadataModule extends Module<
 	private bypassCounter = 0
 	bypassBypass = 0
 	private pendingSteamRedirectFetches: Record<number, boolean> = {}
+	private steamAppIdBackfillAttempted: Record<number, boolean> = {}
+	private backendDiag = callable<[string], void>("log")
 
 	addMounts(mounts: Mounts): void
 	{
 		const module = this
+		const emitDiag = (message: string, payload?: unknown) => {
+			const suffix = payload === undefined ? "" : ` ${JSON.stringify(payload)}`;
+			const line = `${message}${suffix}`;
+			console.warn("[MetaDeck DIAG]", line);
+			void module.backendDiag(line).catch(() => {});
+		}
 				// --- MetaDeck FIX: inject provider (IGDB) descriptions into Steam UI ---
 		mounts.addPatchMount({
 			patch(): Patch
@@ -217,6 +226,7 @@ export class MetadataModule extends Module<
 								} catch (e) {}
 
 								module.logger.debug("DIAG injected descriptions", { appId, chars: full.length });
+								emitDiag("injected descriptions", { appId, chars: full.length });
 								console.warn("[MetaDeck DIAG] injected descriptions appId=", appId, "chars=", full.length);
 								return { strFullDescription: full, strSnippet: snip };
 							};
@@ -299,7 +309,7 @@ export class MetadataModule extends Module<
 				const steamOverview = steamAppId ? appStore.GetAppOverviewByAppID(steamAppId) : null;
 				const shortcutAppData = appDetailsStore.GetAppData(shortcutAppId);
 				const steamAppData = steamAppId ? appDetailsStore.GetAppData(steamAppId) : null;
-				console.warn("[MetaDeck DIAG] redirect state", {
+				emitDiag("redirect state", {
 					source,
 					shortcutAppId,
 					shortcutType: shortcutOverview?.app_type,
@@ -312,7 +322,7 @@ export class MetadataModule extends Module<
 				});
 			} catch (e)
 			{
-				console.warn("[MetaDeck DIAG] redirect state failed", source, shortcutAppId, e);
+				emitDiag("redirect state failed", { source, shortcutAppId, error: String(e) });
 			}
 		};
 
@@ -321,7 +331,7 @@ export class MetadataModule extends Module<
 			const redirectId = getRedirectSteamAppId(appId);
 			if (redirectId)
 			{
-				console.warn(`[MetaDeck] redirect ${source} shortcut=${appId} -> steam_appid=${redirectId}`);
+				emitDiag(`redirect ${source} shortcut=${appId} -> steam_appid=${redirectId}`);
 				args[0] = redirectId;
 				logRedirectDiag(`${source}:redirected`, appId, redirectId);
 				return;
@@ -334,13 +344,24 @@ export class MetadataModule extends Module<
 			if (!overview || overview.app_type !== 1073741824 || !module.isValid || !module.config.use_steam_metadata)
 				return;
 
+			const existingData = module.data?.[appId] as MetadataData | undefined;
+			const existingSteamAppId = existingData?.steam_appid ?? existingData?.steam_appids?.[0];
+			if (existingData && (existingSteamAppId == null || existingSteamAppId === 0) && !module.steamAppIdBackfillAttempted[appId])
+			{
+				module.steamAppIdBackfillAttempted[appId] = true;
+				emitDiag("clearing stale metadata cache for steam appid backfill", { appId });
+				void module.removeCache(appId).catch((error) => {
+					module.logger.warn("Failed to clear stale metadata cache before steam appid backfill", error);
+				});
+			}
+
 			logRedirectDiag(`${source}:awaiting_metadata`, appId);
 			module.pendingSteamRedirectFetches[appId] = true;
 			void module.fetchDataAsync(appId).then((data) => {
 				const steamAppId = data?.steam_appid ?? data?.steam_appids?.[0];
 				if (typeof steamAppId === "number" && steamAppId > 0)
 				{
-					console.warn(`[MetaDeck] resolved steam_appid for shortcut=${appId}: ${steamAppId}; re-requesting app details`);
+					emitDiag(`resolved steam_appid for shortcut=${appId}: ${steamAppId}; re-requesting app details`);
 					logRedirectDiag(`${source}:resolved`, appId, steamAppId);
 					try
 					{
@@ -719,7 +740,7 @@ export class MetadataModule extends Module<
 					const assocData = appDetailsStore.GetAppData(overview.appid)?.associationData;
 					const metadata = module.data?.[overview.appid] as MetadataData | undefined;
 					const metadataSteamAppId = metadata?.steam_appid ?? metadata?.steam_appids?.[0];
-					console.warn("[MetaDeck DIAG] app page", {
+					emitDiag("app page", {
 						appid: overview.appid,
 						name: overview.display_name,
 						overviewType: overview.app_type,
@@ -732,7 +753,7 @@ export class MetadataModule extends Module<
 					});
 				} catch (e)
 				{
-					console.warn("[MetaDeck DIAG] app page inspect failed", e);
+					emitDiag("app page inspect failed", String(e));
 				}
 
 				if (overview.app_type == 1073741824)

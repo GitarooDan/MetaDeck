@@ -40,8 +40,21 @@ export interface IGDBMetadataProviderCache extends ProviderCache<{}, ResolverCac
 }
 
 type IGDBProxyGame = Game & {
-	steam_appid?: number | null,
-	steam_appids?: number[]
+	steam_appid?: number | string | null,
+	steam_appids?: Array<number | string>,
+	steamAppId?: number | string | null,
+	steamAppIds?: Array<number | string>
+}
+
+const toPositiveInt = (value: unknown): number | null => {
+	if (typeof value === "number" && Number.isInteger(value) && value > 0)
+		return value;
+	if (typeof value === "string" && /^\d+$/.test(value))
+	{
+		const parsed = Number(value);
+		return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+	}
+	return null;
 }
 
 export class IGDBMetadataProvider extends MetadataProvider<any>
@@ -134,12 +147,16 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 		const gameDevs: Developer[] = []
 		const gamePubs: Publisher[] = []
 		const gameCats: (StoreCategory | CustomStoreCategory)[] = [CustomStoreCategory.NonSteam]
-		const steamAppids = Array.isArray(game.steam_appids)
-			? game.steam_appids.filter((id) => typeof id === "number")
-			: [];
-		const steamAppid = typeof game.steam_appid === "number"
-			? game.steam_appid
-			: (steamAppids[0] ?? null);
+		const steamAppidsRaw = [
+			...(Array.isArray(game.steam_appids) ? game.steam_appids : []),
+			...(Array.isArray(game.steamAppIds) ? game.steamAppIds : [])
+		];
+		const steamAppids = steamAppidsRaw
+			.map((id) => toPositiveInt(id))
+			.filter((id): id is number => id !== null);
+		const steamAppid = toPositiveInt(game.steam_appid)
+			?? toPositiveInt(game.steamAppId)
+			?? (steamAppids[0] ?? null);
 
 		if (game.game_modes && game.game_modes.length > 0)
 		{
@@ -319,12 +336,28 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 			{
 				games = results.filter(value => value.id === data_id)
 			}
-			const game = games.reverse().pop();
+			const withSteamAppId = games.filter((value) => {
+				const sid = value.steam_appid ?? value.steam_appids?.[0];
+				return typeof sid === "number" && sid > 0;
+			});
+			const game = (withSteamAppId.length > 0 ? withSteamAppId : games).reverse().pop();
 			if (game)
 			{
+				const selectedSteamAppId = game.steam_appid ?? game.steam_appids?.[0];
+				const cachedSteamAppId = this.module.data?.[appId]?.steam_appid ?? this.module.data?.[appId]?.steam_appids?.[0];
+				if ((selectedSteamAppId == null || selectedSteamAppId <= 0) && typeof cachedSteamAppId === "number" && cachedSteamAppId > 0)
+				{
+					game.steam_appid = cachedSteamAppId;
+					game.steam_appids = Array.from(new Set([cachedSteamAppId, ...(game.steam_appids ?? [])]));
+					this.logger.debug("reused cached steam_appid", { appId, cachedSteamAppId });
+				}
+
 				game.store_categories = game.store_categories.concat(await getShortcutCategories(appId));
 			}
-			this.logger.debug(game);
+			this.logger.debug("selected game", game, {
+				totalCandidates: games.length,
+				steamCandidates: withSteamAppId.length
+			});
 			return game
 
 		} else return undefined;
