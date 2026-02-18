@@ -172,7 +172,7 @@ export class MetadataModule extends Module<
 	private bypassCounter = 0
 	bypassBypass = 0
 	private pendingSteamRedirectFetches: Record<number, boolean> = {}
-	private steamAppIdBackfillAttempted: Record<number, boolean> = {}
+	private patchedInfoComponentTypes: WeakSet<object> = new WeakSet<object>()
 	private backendDiag = callable<[string], void>("log")
 
 	addMounts(mounts: Mounts): void
@@ -346,13 +346,9 @@ export class MetadataModule extends Module<
 
 			const existingData = module.data?.[appId] as MetadataData | undefined;
 			const existingSteamAppId = existingData?.steam_appid ?? existingData?.steam_appids?.[0];
-			if (existingData && (existingSteamAppId == null || existingSteamAppId === 0) && !module.steamAppIdBackfillAttempted[appId])
+			if (existingData && (existingSteamAppId == null || existingSteamAppId === 0))
 			{
-				module.steamAppIdBackfillAttempted[appId] = true;
-				emitDiag("clearing stale metadata cache for steam appid backfill", { appId });
-				void module.removeCache(appId).catch((error) => {
-					module.logger.warn("Failed to clear stale metadata cache before steam appid backfill", error);
-				});
+				emitDiag("cached metadata missing steam appid", { appId });
 			}
 
 			logRedirectDiag(`${source}:awaiting_metadata`, appId);
@@ -692,20 +688,29 @@ export class MetadataModule extends Module<
 						return ret;
 
 					const component = findInReactTree(ret, (e) => e?.props?.onImageLoad);
+					const componentPrototype = component?.type?.prototype;
+					if (!componentPrototype)
+						return ret;
 
-					beforePatch(component.type.prototype, "render", function (_) {
-						//@ts-ignore
-						this.m_bDelayedLoad = false
-					})
+					if (!module.patchedInfoComponentTypes.has(componentPrototype))
+					{
+						module.patchedInfoComponentTypes.add(componentPrototype);
+						beforePatch(componentPrototype, "render", function (_) {
+							//@ts-ignore
+							this.m_bDelayedLoad = false
+						})
 
-					afterPatch(component.type.prototype, "render", function (_, ret) {
-						if (!module.isValid || !ret)
-							return ret;
+						afterPatch(componentPrototype, "render", function (_, ret) {
+							if (!module.isValid || !ret)
+								return ret;
 
 						const featuresList = findInReactTree(ret, (e) => Array.isArray(e?.props?.children) && e?.props?.children?.length > 10);
 						const overview: SteamAppOverview = featuresList?.props?.children?.[0]?.props?.overview
 
-						const hasMetadata = hasMetadataForApp(overview?.appid);
+						if (!overview || typeof overview.BHasStoreCategory !== "function")
+							return ret;
+
+						const hasMetadata = hasMetadataForApp(overview.appid);
 						for (const category of Object.values(CustomStoreCategory))
 						{
 							if (category === CustomStoreCategory.NonSteam && hasMetadata)
@@ -720,7 +725,8 @@ export class MetadataModule extends Module<
 
 
 						return ret;
-					});
+						});
+					}
 					return ret;
 				});
 			}

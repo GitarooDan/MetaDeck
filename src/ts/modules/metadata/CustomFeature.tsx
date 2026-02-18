@@ -19,7 +19,7 @@ export interface CustomFeatureProps
 {
 	feature: CustomStoreCategory,
 	minimode: boolean,
-	overview: SteamAppOverview,
+	overview?: SteamAppOverview,
 	suppresstooltip: boolean
 }
 
@@ -36,6 +36,8 @@ export const featureListClasses = findClassModule((m) => m.ExtraMargin) as Featu
 export const CustomFeature: FC<CustomFeatureProps> = ({feature, suppresstooltip, minimode, overview}) => {
 	const Icon = customStoreIcons[feature]
 	const label = t(customStoreTitles[feature])
+	if (!overview || typeof overview.BHasStoreCategory !== "function")
+		return null
 	if (!overview.BHasStoreCategory(feature))
 		return null
 	return <TooltipSource

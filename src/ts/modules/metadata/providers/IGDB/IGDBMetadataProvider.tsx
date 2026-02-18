@@ -126,10 +126,17 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 			return false;
 		const display_name = appStore.GetAppOverviewByAppID(appId)?.display_name;
 		if (!display_name) return false;
-		const results = await this.throttle(() => this.search(display_name));
-		const names = results.map(value => value.title);
-		const closest_names = distanceWithLimit(this.fuzziness, display_name, names);
-		return closest_names.length > 0;
+		try
+		{
+			const results = await this.throttle(() => this.search(display_name));
+			const names = results.map(value => value.title);
+			const closest_names = distanceWithLimit(this.fuzziness, display_name, names);
+			return closest_names.length > 0;
+		} catch (error)
+		{
+			this.logger.warn(`IGDB test failed for ${appId} (${display_name})`, error);
+			return false;
+		}
 	}
 
 	public normalize(str: string): string
@@ -314,7 +321,15 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 		if (!display_name) return undefined;
 		const data_id = this.overrides[appId];
 		this.logger.debug("data_id", data_id);
-		const results = await this.search(display_name);
+		let results: MetadataData[] = [];
+		try
+		{
+			results = await this.search(display_name);
+		} catch (error)
+		{
+			this.logger.warn(`IGDB metadata fetch failed for ${appId} (${display_name})`, error);
+			return undefined;
+		}
 		if (results.length > 0)
 		{
 			this.logger.debug("results", results);
@@ -368,7 +383,15 @@ export class IGDBMetadataProvider extends MetadataProvider<any>
 	{
 		const display_name = appStore.GetAppOverviewByAppID(appId)?.display_name;
 		if (!display_name) return undefined;
-		const results = await this.search(display_name);
+		let results: MetadataData[] = [];
+		try
+		{
+			results = await this.search(display_name);
+		} catch (error)
+		{
+			this.logger.warn(`IGDB getAllMetadata failed for ${appId} (${display_name})`, error);
+			return undefined;
+		}
 		if (results.length > 0)
 		{
 			const names = results.map(value => value.title);
